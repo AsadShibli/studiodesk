@@ -1,0 +1,4 @@
+name,email,notes,booking_start,booking_end,booking_title
+Jordan Lee,jordan@example.com,From Calendly export,2026-09-01T14:00:00.000Z,2026-09-01T15:00:00.000Z,Follow-up
+Bad Row,not-an-email,Should fail dry-run,,,
+Priya Shah,priya@example.com,VIP client,,,

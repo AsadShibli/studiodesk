@@ -1,0 +1,12 @@
+{
+  "name": "studiodesk",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @studiodesk/web --filter @studiodesk/api dev",
+    "db:up": "docker compose up -d",
+    "db:migrate": "pnpm --filter @studiodesk/db migrate",
+    "db:seed": "pnpm --filter @studiodesk/db seed",
+    "db:generate": "pnpm --filter @studiodesk/db generate"
+  }
+}

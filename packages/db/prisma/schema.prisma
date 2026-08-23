@@ -1,0 +1,201 @@
+// StudioDesk schema: every org-scoped table carries orgId so the Prisma
+// tenant extension can inject it and stop cross-studio data leaks.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  owner
+  manager
+  staff
+  client
+}
+
+enum Plan {
+  free
+  pro
+}
+
+enum BookingStatus {
+  scheduled
+  cancelled
+  completed
+}
+
+enum InvoiceStatus {
+  draft
+  open
+  paid
+  void
+}
+
+enum ImportStatus {
+  dry_run
+  committed
+  rolled_back
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sessions         Session[]
+  memberships      Membership[]
+  assignedBookings Booking[]      @relation("BookingStaff")
+  googleAccount    GoogleAccount?
+  portalClients    Client[]
+}
+
+// Cookie stores this id. Random bytes, not a JWT — we can revoke a row.
+model Session {
+  id          String   @id
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activeOrgId String?
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+}
+
+model Org {
+  id                   String   @id @default(cuid())
+  name                 String
+  slug                 String   @unique
+  plan                 Plan     @default(free)
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  memberships      Membership[]
+  clients          Client[]
+  bookings         Booking[]
+  invoices         Invoice[]
+  featureOverrides FeatureOverride[]
+  importBatches    ImportBatch[]
+}
+
+model Membership {
+  id        String   @id @default(cuid())
+  userId    String
+  orgId     String
+  role      Role
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org       Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, orgId])
+}
+
+model Client {
+  id            String   @id @default(cuid())
+  orgId         String
+  org           Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  name          String
+  email         String
+  notes         String?
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
+  importBatchId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  bookings Booking[]
+  invoices Invoice[]
+
+  @@index([orgId])
+  @@index([importBatchId])
+  @@unique([orgId, email])
+}
+
+model Booking {
+  id            String        @id @default(cuid())
+  orgId         String
+  org           Org           @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  clientId      String
+  client        Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  staffId       String?
+  staff         User?         @relation("BookingStaff", fields: [staffId], references: [id])
+  startAt       DateTime
+  endAt         DateTime
+  status        BookingStatus @default(scheduled)
+  title         String        @default("Session")
+  googleEventId String?
+  importBatchId String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([orgId])
+  @@index([importBatchId])
+}
+
+model Invoice {
+  id                      String        @id @default(cuid())
+  orgId                   String
+  org                     Org           @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  clientId                String
+  client                  Client        @relation(fields: [clientId], references: [id])
+  amountCents             Int
+  currency                String        @default("usd")
+  status                  InvoiceStatus @default(draft)
+  stripeCheckoutSessionId String?
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+
+  @@index([orgId])
+}
+
+// Org-level override wins over plan entitlements in the flag evaluator.
+model FeatureOverride {
+  id      String  @id @default(cuid())
+  orgId   String
+  org     Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  flagKey String
+  enabled Boolean
+
+  @@unique([orgId, flagKey])
+}
+
+model ImportBatch {
+  id        String       @id @default(cuid())
+  orgId     String
+  org       Org          @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  source    String       @default("csv")
+  status    ImportStatus @default(dry_run)
+  mapping   Json
+  createdAt DateTime     @default(now())
+  rows      ImportRow[]
+}
+
+model ImportRow {
+  id      String      @id @default(cuid())
+  batchId String
+  batch   ImportBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  line    Int
+  payload Json
+  error   String?
+}
+
+// Stripe/Google webhook event ids — insert first so retries are no-ops.
+model ProcessedEvent {
+  id        String   @id
+  source    String
+  createdAt DateTime @default(now())
+}
+
+model GoogleAccount {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshToken String
+  accessToken  String?
+  expiryDate   DateTime?
+}
