@@ -10,7 +10,7 @@ Built as **Next.js** UI, **Express** API, **PostgreSQL** + **Prisma**. The brows
 
 | | |
 | --- | --- |
-| App | http://localhost:3000 |
+| App | https://studiodesk-one.vercel.app |
 | Owner | `owner@demo` / `demo1234` |
 | Manager | `manager@demo` / `demo1234` (cannot change the plan) |
 | Studios | **Northshore** (Free) and **Harbor** (Pro) — switch in the sidebar |
@@ -46,7 +46,7 @@ Three folders, three jobs:
 | `apps/api` | Login, permissions, billing, import. |
 | `packages/db` | Tables and the tenant helper. |
 
-The browser only talks to `localhost:3000`. Next.js forwards `/api/...` to Express on port 4000. Cookies stay on one site, so we do not fight CORS.
+Live demo: [studiodesk-one.vercel.app](https://studiodesk-one.vercel.app). Locally the browser only talks to `localhost:3000`. Next.js forwards `/api/...` to Express on port 4000 (on Vercel, Express runs as `/api` on the same site). Cookies stay first-party, so we do not fight CORS.
 
 ### Why the UI never touches the database
 
