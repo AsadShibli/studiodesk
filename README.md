@@ -1,8 +1,8 @@
 # StudioDesk
 
-A client-operations app for small studios: people you work with, sessions on the calendar, and invoices when you need them.(it could be used for shops , clinic , online session etc ) 
+A client-operations app for small studios: people you work with, sessions on the calendar, and invoices when you need them. It can also fit a shop, a clinic, or online sessions.
 
-Built as — **Next.js** UI, **Express** API, **PostgreSQL** + **Prisma**. The browser never talks to the database. Next.js rewrites `/api/*` to Express so cookies stay first-party.
+Built as **Next.js** UI, **Express** API, **PostgreSQL** + **Prisma**. The browser never talks to the database.
 
 ![Landing](docs/screenshots/landing.png)
 
@@ -32,20 +32,67 @@ Switching studios is the feature-flag demo: Invoices is in the menu on Pro, gone
 
 ![CSV import](docs/screenshots/import.png)
 
-## Stack decisions 
+## How a request works
 
-| Choice | Why |
+```
+Browser  →  Next.js (pages only)  →  /api/* rewrite  →  Express  →  Prisma  →  Postgres
+```
+
+Three folders, three jobs:
+
+| Folder | Job |
 | --- | --- |
-| Sessions in Postgres, httpOnly cookie | Log out deletes a row. Org switch does not mint JWTs. |
-| `prismaForOrg(orgId)` | Tenant `orgId` is injected. A missed `WHERE` cannot leak another studio. |
-| `authorize({ permission, flag })` | Roles are permission bundles. The plan is a set of flags. No `if (role === "admin")`. |
-| Import `batchId` | Rollback is `DELETE WHERE importBatchId = ?`. |
-| Stripe / Google webhooks | Event ids go in `ProcessedEvent` first so retries are no-ops. |
+| `apps/web` | Screens and forms. No SQL. |
+| `apps/api` | Login, permissions, billing, import. |
+| `packages/db` | Tables and the tenant helper. |
 
-Two files to open:
+The browser only talks to `localhost:3000`. Next.js forwards `/api/...` to Express on port 4000. Cookies stay on one site, so we do not fight CORS.
 
-- [`packages/db/src/tenant.ts`](packages/db/src/tenant.ts)
-- [`apps/api/src/lib/authorize.ts`](apps/api/src/lib/authorize.ts)
+### Why the UI never touches the database
+
+If Next.js ran Prisma too, login rules and tenant rules would live in two places. Express is the only door to data. You can call the same API with `curl`. In production the rewrite is just nginx or Caddy doing the same job.
+
+### Why login is a row in Postgres, not a JWT in the browser
+
+Each sign-in creates a `Session` row. The cookie only stores that row’s id (`httpOnly`, so JavaScript cannot read it).
+
+- Log out = delete the row. That device is done.
+- Switch studio = update `activeOrgId` on the same row. No new token.
+- A stolen JWT in `localStorage` cannot be revoked until it expires. A stolen cookie can: delete the row.
+
+### Why every query gets `orgId` for free
+
+Harbor and Northshore share one database. The dangerous bug is “forgot `WHERE orgId`” and Harbor sees Northshore’s clients.
+
+`prismaForOrg(orgId)` wraps Prisma and **adds `orgId` itself**. A missed filter cannot leak another studio.
+
+See [`packages/db/src/tenant.ts`](packages/db/src/tenant.ts).
+
+### Why routes never ask “are you admin?”
+
+A **role** is only a list of **permissions** (owner, manager, staff, client). A **plan** is only a list of **flags** (invoices on Pro, off on Free). An extra override can turn one flag on for one studio.
+
+Every route asks one question:
+
+```ts
+authorize({ permission: "invoice:write", flag: "invoicing" })
+```
+
+“Can this person, in this studio, do this — and is the feature on?” Manager has no `billing:manage`, so plan changes return 403. Free has no invoicing flag, so Invoices stays out of the menu.
+
+See [`apps/api/src/lib/authorize.ts`](apps/api/src/lib/authorize.ts).
+
+### Why a client is not a user
+
+A client is a name and email. They get a login only if you invite them. Importing 200 rows from a spreadsheet must not create 200 passwords.
+
+### Why import can be undone
+
+Each save is tagged with an `importBatchId`. Undo is one delete: every row from that batch. Check first (no writes), then save, then undo if it was wrong.
+
+### Why Stripe and Google retries do not double-charge
+
+Those services retry webhooks. We store the event id in `ProcessedEvent` **before** we change the plan or mark an invoice paid. The same id a second time is ignored.
 
 ## Run locally
 
@@ -61,7 +108,7 @@ pnpm dev
 ```
 
 - UI: http://localhost:3000
-- API: http://localhost:4000/api/health (also available via the Next rewrite as `/api/health`)
+- API: http://localhost:4000/api/health (also `/api/health` on port 3000)
 
 Optional env (see `.env.example`): Stripe Checkout and Google Calendar. Without those keys the app still runs — Switch to Pro and Collect payment have a local stand-in.
 
