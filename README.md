@@ -1,8 +1,8 @@
 # StudioDesk
 
-A client-operations app for small studios: people you work with, sessions on the calendar, and invoices when you need them. The same shape also fits a shop, a clinic, or online sessions.
+A client-operations app for small studios: people you work with, sessions on the calendar, and invoices when you need them. It can also fit a shop, a clinic, or online sessions.
 
-Built with **Next.js**, **Express**, **PostgreSQL**, and **Prisma**. The browser never talks to the database.
+Built as **Next.js** UI, **Express** API, **PostgreSQL** + **Prisma**. The browser never talks to the database.
 
 ![Landing](docs/screenshots/landing.png)
 
@@ -32,7 +32,7 @@ Switching studios is the feature-flag demo: Invoices is in the menu on Pro, gone
 
 ![CSV import](docs/screenshots/import.png)
 
-## How it is put together
+## How a request works
 
 ```
 Browser  →  Next.js (pages only)  →  /api/* rewrite  →  Express  →  Prisma  →  Postgres
@@ -110,4 +110,13 @@ pnpm dev
 - UI: http://localhost:3000
 - API: http://localhost:4000/api/health (also `/api/health` on port 3000)
 
-Optional env (see `.env.example`): Stripe Checkout and Google Calendar. Without keys, Switch to Pro and Collect payment still work locally.
+Optional env (see `.env.example`): Stripe Checkout and Google Calendar. Without those keys the app still runs — Switch to Pro and Collect payment have a local stand-in.
+
+## Layout
+
+```
+apps/web       Next.js App Router (no Prisma)
+apps/api       Express + Zod
+packages/db    Prisma schema, tenant extension, seed
+docs/screenshots
+```
