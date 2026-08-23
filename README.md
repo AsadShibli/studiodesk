@@ -32,7 +32,7 @@ Switching studios is the feature-flag demo: Invoices is in the menu on Pro, gone
 
 ![CSV import](docs/screenshots/import.png)
 
-## Stack decisions (the interview bits)
+## Stack decisions 
 
 | Choice | Why |
 | --- | --- |
