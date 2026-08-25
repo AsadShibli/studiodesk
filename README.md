@@ -32,6 +32,30 @@ Switching studios is the feature-flag demo: Invoices is in the menu on Pro, gone
 
 ![CSV import](docs/screenshots/import.png)
 
+## Features
+
+- **Clients** — contacts, not logins. A spreadsheet import does not create hundreds of passwords.
+- **Bookings** — sessions on the calendar, optionally assigned to a teammate.
+- **Invoices** — only when the studio’s plan (or an extra) turns invoicing on. The flag follows the studio, not the user.
+- **CSV import** — dry-run first, then save the good rows. Undo is one delete by `importBatchId`.
+- **Multi-tenant isolation** — `prismaForOrg(orgId)` injects `orgId` so a missed `WHERE` cannot leak another studio.
+- **RBAC + feature flags** — roles are permission lists; plans are flag lists. Routes call `authorize({ permission, flag })`, never `if (role === "admin")`.
+- **Sessions in Postgres** — httpOnly cookie stores a session row id. Log out deletes the row. Switching studios does not mint a JWT.
+- **Stripe + Google** — optional. Empty keys use a local stand-in. Webhook event ids go in `ProcessedEvent` first so retries are no-ops.
+
+## Tech stack
+
+| Layer | Technology |
+| --- | --- |
+| Frontend | Next.js 15 (App Router), React 19 |
+| API | Express, Zod |
+| Database | PostgreSQL + Prisma |
+| Monorepo | pnpm workspaces (`apps/*`, `packages/*`) |
+| Auth | Session row + httpOnly cookie (not JWT) |
+| Billing | Stripe Checkout (optional; local “Switch to Pro” if keys are empty) |
+| Calendar | Google Calendar (optional) |
+| Deploy | Vercel (same-origin `/api`), Docker Postgres locally |
+
 ## How a request works
 
 ```
@@ -115,8 +139,19 @@ Optional env (see `.env.example`): Stripe Checkout and Google Calendar. Without 
 ## Layout
 
 ```
-apps/web       Next.js App Router (no Prisma)
-apps/api       Express + Zod
-packages/db    Prisma schema, tenant extension, seed
-docs/screenshots
+studiodesk/
+├── apps/
+│   ├── web/                 Next.js App Router (no Prisma)
+│   │   ├── app/             landing, login, register, /app/*
+│   │   └── pages/api/       Express on Vercel (same-origin /api)
+│   └── api/                 Express + Zod
+│       ├── src/lib/         authorize, permissions, sessions
+│       └── src/routes/      auth, clients, bookings, invoices, import
+├── packages/db/
+│   ├── prisma/              schema + migrations
+│   └── src/                 tenant helper (`prismaForOrg`), seed
+├── docs/screenshots/
+├── docker-compose.yml       local Postgres
+├── .env.example
+└── README.md
 ```
