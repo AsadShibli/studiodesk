@@ -19,8 +19,13 @@ const links = [
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [me, setMe] = useState<Me | null>(null);
   const [invoicing, setInvoicing] = useState(false);
+  const [navOpen, setNavOpen] = useState(false); // phones only; CSS hides this on desktop
   const pathname = usePathname();
   const router = useRouter();
+
+  useEffect(() => {
+    setNavOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     api<Me>("/api/me")
@@ -48,7 +53,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="shell">
-      <aside className="sidebar">
+      <header className="topbar">
+        <p className="brand">StudioDesk</p>
+        <button className="btn secondary" type="button" onClick={() => setNavOpen((open) => !open)}>
+          {navOpen ? "Close" : "Menu"}
+        </button>
+      </header>
+      <aside className={navOpen ? "sidebar open" : "sidebar"}>
         <p className="brand">StudioDesk</p>
         {me.orgs.length > 0 ? (
           <>

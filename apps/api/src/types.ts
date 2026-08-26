@@ -17,4 +17,12 @@ declare global {
   }
 }
 
+// Commented out: Next's typecheck errors "module cannot be found" without a
+// local import of express-serve-static-core. Global Express.Request is enough.
+// declare module "express-serve-static-core" {
+//   interface Request {
+//     ctx?: RequestCtx;
+//   }
+// }
+
 export {};

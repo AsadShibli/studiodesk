@@ -63,6 +63,8 @@ input, select, textarea {
   margin-top: 0.75rem;
 }
 .brand { font-size: 1.15rem; margin: 0 0 1.5rem; }
+/* Shown only on phones — see the media query below. */
+.topbar { display: none; }
 .main { padding: 2rem; max-width: 960px; }
 .card {
   background: var(--paper);
@@ -82,3 +84,87 @@ input, select, textarea {
 .auth-card { width: min(420px, 100%); }
 .hero { max-width: 640px; margin: 12vh auto; padding: 0 1.5rem; }
 .hero ul { padding-left: 1.2rem; }
+
+/* Phones: sidebar on top, content full width. Desktop grid stays 240px + main. */
+@media (max-width: 720px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--sidebar);
+    color: var(--sidebar-text);
+  }
+  .topbar .brand { margin: 0; }
+  .topbar .btn.secondary {
+    color: var(--sidebar-text);
+    border-color: #5a534c;
+  }
+  /* display:none snaps open/closed. Keep the sidebar in the layout and animate it. */
+  /* .sidebar {
+    display: none;
+    padding: 1rem;
+  }
+  .sidebar.open {
+    display: block;
+  } */
+  .sidebar {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    padding: 0 1rem;
+    pointer-events: none;
+    transition: max-height 0.28s ease, opacity 0.2s ease, padding 0.28s ease;
+  }
+  .sidebar.open {
+    max-height: 70vh;
+    opacity: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    pointer-events: auto;
+  }
+  /* Name already sits in the top bar on phones. */
+  .sidebar .brand {
+    display: none;
+  }
+  .main {
+    padding: 1.25rem 1rem;
+    max-width: 100%;
+  }
+  .hero {
+    margin: 4vh auto;
+    padding: 0 1rem;
+  }
+  .auth-wrap {
+    padding: 1rem;
+  }
+  .card {
+    padding: 1rem;
+  }
+  /* Stack name/email/date fields instead of a squeezed row. */
+  .row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .row > * {
+    width: 100%;
+  }
+  .card .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  /* Keep table columns; swipe sideways instead of shrinking the page. */
+  .table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .table th,
+  .table td {
+    white-space: nowrap;
+  }
+}

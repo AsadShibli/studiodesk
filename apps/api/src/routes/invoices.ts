@@ -47,6 +47,7 @@ invoicesRouter.post(
     }
     const invoice = await db.invoice.create({
       data: {
+        orgId: req.ctx!.org!.id,
         clientId: client.id,
         amountCents: parsed.data.amountCents,
         status: "open",

@@ -114,6 +114,7 @@ importsRouter.post("/imports/:id/commit", authorize({ permission: "import:write"
       where: { orgId_email: { orgId, email: p.email } },
       update: { name: p.name, notes: p.notes, importBatchId: batch.id },
       create: {
+        orgId,
         name: p.name,
         email: p.email,
         notes: p.notes,
@@ -123,6 +124,7 @@ importsRouter.post("/imports/:id/commit", authorize({ permission: "import:write"
     if (p.startAt && p.endAt) {
       await db.booking.create({
         data: {
+          orgId,
           clientId: client.id,
           title: p.title,
           startAt: new Date(p.startAt),

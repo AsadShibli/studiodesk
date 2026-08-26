@@ -1,7 +1,14 @@
 export const env = {
   databaseUrl: process.env.DATABASE_URL ?? "",
   cookieName: process.env.SESSION_COOKIE ?? "studiodesk_session",
-  webOrigin: process.env.WEB_ORIGIN ?? "http://localhost:3000",
+  // Local default :3000. On Vercel, WEB_ORIGIN or the deployment URL.
+  webOrigin:
+    process.env.WEB_ORIGIN ??
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : "http://localhost:3000"),
   apiPort: Number(process.env.API_PORT ?? 4000),
   stripeSecret: process.env.STRIPE_SECRET_KEY ?? "",
   stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET ?? "",

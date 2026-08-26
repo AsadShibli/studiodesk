@@ -1,5 +1,7 @@
 import express from "express";
 import cookieParser from "cookie-parser";
+// Side-effect: Express Request.ctx (needed when Next type-checks this tree).
+import "./types";
 import { healthRouter } from "./routes/health";
 import { authRouter } from "./routes/auth";
 import { orgsRouter } from "./routes/orgs";

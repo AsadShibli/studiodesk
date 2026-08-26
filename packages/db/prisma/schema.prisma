@@ -1,7 +1,9 @@
 // StudioDesk schema: every org-scoped table carries orgId so the Prisma
 // tenant extension can inject it and stop cross-studio data leaks.
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // native = local Docker; rhel = Vercel serverless Linux
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {

@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
+import "../types"; // Express Request.ctx augmentation
 import { isFlagEnabled, type FlagKey } from "./flags";
 import type { Permission } from "./permissions";
 

@@ -51,6 +51,7 @@ bookingsRouter.post("/bookings", authorize({ permission: "booking:write" }), asy
 
   const booking = await db.booking.create({
     data: {
+      orgId,
       clientId: client.id,
       staffId,
       title: parsed.data.title ?? "Session",

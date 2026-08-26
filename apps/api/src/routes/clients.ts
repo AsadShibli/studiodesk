@@ -31,7 +31,7 @@ clientsRouter.post("/clients", authorize({ permission: "client:write" }), async 
   const email = parsed.data.email.toLowerCase();
   try {
     const client = await db.client.create({
-      data: { name: parsed.data.name, email, notes: parsed.data.notes },
+      data: { orgId: req.ctx!.org!.id, name: parsed.data.name, email, notes: parsed.data.notes },
     });
     res.status(201).json(client);
   } catch {
