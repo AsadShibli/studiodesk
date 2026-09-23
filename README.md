@@ -8,7 +8,7 @@ The website is Next.js. The API is Express. The database is PostgreSQL, accessed
 
 https://studiodesk-one.vercel.app
 
-| Login | Password | What you can do |
+| Login | Password | What the role can do |
 | --- | --- | --- |
 | `owner@demo` | `demo1234` | Everything. Switch between two studios. |
 | `manager@demo` | `demo1234` | Clients, bookings, import. Cannot change the plan. |
@@ -18,7 +18,7 @@ https://studiodesk-one.vercel.app
 
 Same owner, same login. Use the studio menu in the sidebar. Each studio only sees its own clients and bookings.
 
-## What you can do
+## features: 
 
 - Add clients. A client is a name and email, not a login.
 - Book a session with a client.
