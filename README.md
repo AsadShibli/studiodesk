@@ -1,6 +1,6 @@
 # StudioDesk
 
-A small app for a studio to keep clients, book sessions, and send invoices.
+A small app for a studio to keep clients, book sessions, and send invoices.It can also fit a shop, a clinic, or online sessions.
 
 The website is Next.js. The API is Express. The database is PostgreSQL, accessed with Prisma. Pages never query the database.
 
